@@ -1,0 +1,33 @@
+{
+    "model" : {
+        "input_size":       416,
+        "grid_size":        13,
+        "true_box_buffer":  30,
+        "iou_threshold":    0.5,  
+        "nms_threshold":    0.3
+    },
+    "config_path" : {
+        "labels":           "models/coco/labels_coco.txt",
+        "anchors":          "models/coco/anchors_coco.txt",
+        "arch_plotname":    ""
+    },
+    "train": {
+        "out_model_name":   "",
+        "image_folder":     "",
+        "annot_folder":     "",
+        "batch_size":       16,
+        "learning_rate":    1e-4,
+        "num_epochs":       20,
+        "object_scale":     5.0 ,
+        "no_object_scale":  1.0,
+        "coord_scale":      1.0,
+        "class_scale":      1.0,
+        "verbose":          1
+    },
+
+    "valid": {
+        "image_folder":     "",
+        "annot_folder":     "",
+        "pred_folder":      ""
+    }
+}

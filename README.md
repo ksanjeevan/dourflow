@@ -55,7 +55,7 @@ Pretrained COCO/VOC keras models can be downloaded [here](https://drive.google.c
   
 
 ##### *conf*
-Pass a config.json file that looks like this:
+Pass a config.json file that looks like this (minus the comments!):
 
 ```
 {
@@ -119,7 +119,7 @@ Example:
 python3 dourflow.py theoffice.png -m coco_model.h5 -c coco_config.json -t 0.35
 ```
 <p align="center">
-<img src="result_plots/batchex.png" width="400px"/>
+<img src="result_plots/batchex.png" width="500px"/>
 </p>
 
 

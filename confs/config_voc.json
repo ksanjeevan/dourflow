@@ -1,0 +1,34 @@
+{
+    "model" : {
+        "input_size":       416,
+        "grid_size":        13,
+        "true_box_buffer":  10,
+        "iou_threshold":    0.5,  
+        "nms_threshold":    0.3
+    },
+    "config_path" : {
+        "labels":           "models/voc/labels_voc.txt",
+        "anchors":          "models/voc/anchors_voc.txt",
+        "arch_plotname":    ""
+    },
+    "train": {
+        "out_model_name":   "yolo_retrained_voc.h5",
+        "image_folder":     "/home/kiran/Documents/DATA/VOC/train/imgs",
+        "annot_folder":     "/home/kiran/Documents/DATA/VOC/train/anns",
+        "batch_size":       16,
+        "learning_rate":    1e-4,
+        "num_epochs":       20,
+        "object_scale":     5.0 ,
+        "no_object_scale":  1.0,
+        "coord_scale":      1.0,
+        "class_scale":      1.0,
+        "verbose":          1
+    },
+
+    "valid": {
+        "image_folder":     "/home/kiran/Documents/DATA/VOC/valid/imgs",
+        "annot_folder":     "/home/kiran/Documents/DATA/VOC/valid/anns",
+        "pred_folder":      "/home/kiran/Documents/DATA/VOC/valid/img_pred",
+        "plot_preds":       true
+    }
+}
