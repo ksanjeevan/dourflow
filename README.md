@@ -1,4 +1,4 @@
-# dourflow: keras implementation of YOLO v2 
+# dourflow: Keras implementation of YOLO v2 
 
 **dourflow** is a keras/tensorflow implementation of the state-of-the-art object detection system [You only look once](https://pjreddie.com/darknet/yolo/). 
 
@@ -7,16 +7,17 @@
  
  
 <p align="center">
-<img src="result_plots/drivingsfs.gif" width="500px"/>
+<img src="result_plots/drivingsf.gif" width="600px"/>
 </p>
 
 ### Dependancies
 ---
-keras
-tensorflow
-cv2
-h5py 
-pydot-ng 
+- [keras](https://github.com/fchollet/keras)
+- [tensorflow](https://www.tensorflow.org/)
+- [numpy](http://www.numpy.org/)
+- [h5py](http://www.h5py.org/)
+- [opencv](https://pypi.org/project/opencv-python/)
+- [python 3](https://www.python.org/)
 
 ### Usage
 ---
