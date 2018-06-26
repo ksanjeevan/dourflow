@@ -55,6 +55,7 @@ class YoloLoss(object):
         self.lambda_class = YoloParams.CLASS_SCALE
 
         self.norm = False
+        self.paper_imp = False
 
     def coord_loss(self, y_true, y_pred):
         
@@ -115,6 +116,13 @@ class YoloLoss(object):
 
         loss_class_arg = tf.nn.sparse_softmax_cross_entropy_with_logits(
             labels=b_class, logits=b_class_pred)
+
+        '''
+        if self.paper_imp:
+            loss_class_arg = 
+
+        '''
+
 
         loss_class = K.sum(loss_class_arg * indicator_class, axis=[1,2,3])
 

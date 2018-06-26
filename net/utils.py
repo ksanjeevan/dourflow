@@ -252,8 +252,9 @@ def setup_logging(logging_path='logs'):
     log_path = os.path.join(os.getcwd(),logging_path)
     mkdir_p(log_path)
 
-    get_ind = lambda x: int(x.split('_')[1])
-    #run_counter = max([get_ind(r) for r in os.listdir(log_path)]) + 1
+    check_names = lambda y: y if isinstance(y, int) else -1
+    get_ind = lambda x: int(check_names(x.split('_')[1]))
+    
     run_counter = max(map(get_ind, os.listdir(log_path)), default=-1) + 1
 
     run_path = os.path.join(log_path, 'run_%s'%run_counter)

@@ -1,6 +1,6 @@
 
 import pickle, argparse, json, os, sys
-import tensorflow as tf
+from keras import backend as K
 import numpy as np
 
 
@@ -53,14 +53,11 @@ with open(config_path) as config_buffer:
         config = json.loads(config_buffer.read())
 
 
-
 def generate_yolo_grid(batch, g, num_bb):
-    c_x = tf.to_float(tf.reshape(tf.tile(tf.range(g), [g]), (1, g, g, 1, 1)))
-    c_y = tf.transpose(c_x, (0,2,1,3,4))
-    return tf.tile(tf.concat([c_x, c_y], -1), [batch, 1, 1, num_bb, 1])
-
-
-
+    c_x = K.cast(K.reshape(K.tile(K.arange(g), [g]), (1, g, g, 1, 1)), K.floatx())
+    c_y = K.permute_dimensions(c_x, (0,2,1,3,4))
+    return K.tile(K.concatenate([c_x, c_y], -1), [batch, 1, 1, num_bb, 1])
+ 
 
 def get_threshold(value):
     if value > 1. or value < 0:

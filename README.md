@@ -197,7 +197,7 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 - [ ] cfg parser
 - [ ] Anchor generation for custom datasets
 - [ ] mAP write up
-
+- [ ] Add webcam support
 
 #### Inspired from
 
