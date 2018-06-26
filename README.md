@@ -1,14 +1,14 @@
 # dourflow: Keras implementation of YOLO v2 
 
+<p align="center">
+<img src="result_plots/drivingsf.gif" width="650px"/>
+</p>
+
+
 **dourflow** is a keras/tensorflow implementation of the state-of-the-art object detection system [You only look once](https://pjreddie.com/darknet/yolo/). 
 
-- Original paper: [YOLO9000: Better, Faster, Stronger](https://arxiv.org/abs/1612.08242)
-- Github repo: [Darknet](https://github.com/pjreddie/darknet)
+Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.org/abs/1612.08242) & [Darknet](https://github.com/pjreddie/darknet).
  
- 
-<p align="center">
-<img src="result_plots/drivingsf.gif" width="600px"/>
-</p>
 
 ### Dependancies
 ---
@@ -17,7 +17,7 @@
 - [numpy](http://www.numpy.org/)
 - [h5py](http://www.h5py.org/)
 - [opencv](https://pypi.org/project/opencv-python/)
-- [python 3](https://www.python.org/)
+- [python3.5](https://www.python.org/)
 
 ### Usage
 ---
@@ -131,7 +131,7 @@ Example:
 ```bash
 python3 dourflow.py validate -m voc_model.h5 -c voc_config.json
 ```
-Terminal output:
+Output:
 ```bash
 Batch Processed: 100%|████████████████████████████████████████████| 4282/4282 [01:53<00:00, 37.84it/s]
 AP( bus ): 0.806
