@@ -116,7 +116,7 @@ Will create a directory named **out/** in the current one and output all the ima
 
 Example:
 ```bash
-python3 dourflow.py theoffice.png -m coco_model.h5 -c coco_config.json -t 0.35
+python3 dourflow.py images/ -m coco_model.h5 -c coco_config.json -t 0.35
 ```
 <p align="center">
 <img src="result_plots/batchex.png" width="500px"/>
