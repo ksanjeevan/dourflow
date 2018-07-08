@@ -19,6 +19,15 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 - [opencv](https://pypi.org/project/opencv-python/)
 - [python3.5](https://www.python.org/)
 
+### Simple use
+---
+1. Download pretrained [model](https://drive.google.com/open?id=1khOgS8VD-paUD8KhjOLOzEXkzaXNAAMq) and place it in **dourflow/**.
+2. Predict on an image:
+
+```bash
+python3 dourflow.py path/to/test_image
+```
+
 ### Usage
 ---
 Running `python3 dourflow.py --help`:
@@ -45,8 +54,9 @@ optional arguments:
 Pass what to do with dourflow:
 
 1. A path to an image file/dir or video: Run inference on those file(s).
-2. 'validate': Perform validation on a trained model.
-3. 'train': Perform training on your own dataset.
+2. 'cam': Run inference on webcam ('cams' to store the output).
+3. 'validate': Perform validation on a trained model.
+4. 'train': Perform training on your own dataset.
 
 ##### *model*
 Pass the keras input model h5 file (could be to perform inference, validate against or for transfer learning). 
@@ -128,10 +138,12 @@ python3 dourflow.py images/ -m coco_model.h5 -c coco_config.json -t 0.35
 Allows to evaluate the performance of a model by computing its [mean Average Precision](http://host.robots.ox.ac.uk:8080/pascal/VOC/voc2012/htmldoc/devkit_doc.html#SECTION00050000000000000000) in the task of object detection (mAP WRITE UP COMING SOON).
 
 Example:
+
 ```bash
 python3 dourflow.py validate -m voc_model.h5 -c voc_config.json
 ```
 Output:
+
 ```bash
 Batch Processed: 100%|████████████████████████████████████████████| 4282/4282 [01:53<00:00, 37.84it/s]
 AP( bus ): 0.806
@@ -162,10 +174,6 @@ mAP: 0.674
 
 ### Training
 ---
-**NEED TO DO A FEW FIXES TO LOSS FUNCTION BEFORE THIS IS DONE**
----
-
-
 
 ##### Split dataset
 Script to generate training/testing splits.
@@ -193,11 +201,10 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 
 #### To Do
 
-- [ ] TRAINING BUG / FINISH LOSS FUNCTION
 - [ ] cfg parser
 - [ ] Anchor generation for custom datasets
 - [ ] mAP write up
-- [ ] Add webcam support
+- [x] Add webcam support
 
 #### Inspired from
 

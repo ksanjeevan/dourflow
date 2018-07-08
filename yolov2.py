@@ -91,6 +91,10 @@ class YoloV2(object):
             elif YoloParams.YOLO_MODE == 'video':
                 self.video_inference(YoloParams.PREDICT_IMAGE)
 
+            elif YoloParams.YOLO_MODE == 'cam':
+                self.cam_inference(YoloParams.WEBCAM_OUT)
+
+
         # Sometimes bug: https://github.com/tensorflow/tensorflow/issues/3388
         K.clear_session()
 
@@ -136,8 +140,7 @@ class YoloV2(object):
         size = (video_width, video_height)
         fps = round(cap.get(cv2.CAP_PROP_FPS))
 
-        #fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
 
         writer = cv2.VideoWriter(filename.split('.')[0]+"_pred.mp4", fourcc, fps, size)
         
@@ -164,31 +167,36 @@ class YoloV2(object):
         cv2.destroyAllWindows()
 
 
-    def video_inference2(self):
-        # MAKEONE FOR WEBCAM, USE COMMENTED CODE FROM ABOVE
-        video_reader = cv2.VideoCapture(video_inp)
+    def cam_inference(self, fname):
+        
+        cap = cv2.VideoCapture(0)    
+        video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        size = (video_width, video_height)
+        fps = round(cap.get(cv2.CAP_PROP_FPS))
 
-        nb_frames = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
-        frame_h = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        frame_w = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
+        fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
 
-        video_writer = cv2.VideoWriter(video_out,
-                                       cv2.VideoWriter_fourcc(*'XVID'), 
-                                       50.0, 
-                                       (frame_w, frame_h))
+        if fname: writer = cv2.VideoWriter("out.mp4", fourcc, fps, size)
 
+        while(cap.isOpened()):
 
-        for i in tqdm(range(nb_frames)):
-            ret, image = video_reader.read()
+            ret, frame = cap.read()
+            if ret==True:
 
-            boxes, scores, _, labels = self.inf_model.predict(image)
+                boxes, scores, _, labels = self.inf_model.predict(frame)
+                frame_pred = draw_boxes(frame, (boxes, scores, labels))
 
-            image = draw_boxes(image, (boxes, scores, labels))
-            
-            video_writer.write(np.uint8(image))
-            
-        video_reader.release()
-        video_writer.release()  
+                if fname: writer.write(frame)
+
+                cv2.imshow('Yolo Output',frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+        cap.release()
+        if fname: writer.release()
+        cv2.destroyAllWindows()  
 
 
 

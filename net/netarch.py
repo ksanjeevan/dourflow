@@ -30,7 +30,7 @@ class YoloArchitecture(object):
             #new_name = self.tl_weights_name.split('.')[0] + '_rand.h5'
             #new_yolo_model.save_weights(new_name)
 
-        elif YoloParams.YOLO_MODE in ['inference','validate','video']:
+        elif YoloParams.YOLO_MODE in ['inference','validate','video','cam']:
             new_yolo_model = yolo_model
 
         else:

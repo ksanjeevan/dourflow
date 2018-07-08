@@ -17,14 +17,14 @@ argparser.add_argument(
     '-m',
     '--model',
     help='path to input yolo v2 keras model',
-    default='yolo_model.h5')
+    default='coco_model.h5')
 
 
 argparser.add_argument(
     '-c',
     '--conf',
     help='path to configuration file',
-    default='config.json')
+    default='confs/config_coco.json')
 
 
 argparser.add_argument(
@@ -71,8 +71,16 @@ class YoloParams(object):
     # Mode
     PREDICT_IMAGE = ''
     WEIGHT_FILE = ''
-    if action != 'gen':
-        if action == 'validate' or action == 'train':
+    WEBCAM_OUT = ''
+
+    if action == 'gen':
+        assert args.weight_file, "Need to pass weight file if generating model."
+        WEIGHT_FILE = args.weight_file
+    elif action == 'cams':
+        WEBCAM_OUT = 'cam_out.mp4'
+        YOLO_MODE = 'cam'
+    else:
+        if action == 'validate' or action == 'train' or action == 'cam':
             YOLO_MODE = action
         else:
             if os.path.isdir(action):
@@ -83,14 +91,10 @@ class YoloParams(object):
                 else:
                     YOLO_MODE = 'inference'
             else:
-                raise ValueError('First argument for dourflow must be: \'training\','
-                    ' \'validation\' or an image file/dir.')    
+                raise ValueError('Run \'python3 dourflow.py --help\'.')    
 
             PREDICT_IMAGE = action
-    else:
-        assert args.weight_file, "Need to pass weight file if generating model."
-        # Paths
-        WEIGHT_FILE = args.weight_file
+        
 
     TRAIN_IMG_PATH = config['train']['image_folder'] 
     TRAIN_ANN_PATH = config['train']['annot_folder']
