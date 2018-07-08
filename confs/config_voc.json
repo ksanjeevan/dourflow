@@ -9,7 +9,7 @@
     "config_path" : {
         "labels":           "models/voc/labels_voc.txt",
         "anchors":          "models/voc/anchors_voc.txt",
-        "arch_plotname":    ""
+        "arch_plotname":    "voc_arch.png"
     },
     "train": {
         "out_model_name":   "yolo_retrained_voc.h5",

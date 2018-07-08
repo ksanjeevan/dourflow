@@ -120,6 +120,8 @@ class YoloV2(object):
 
             boxes, scores, _, labels = self.inf_model.predict(image.copy())
 
+            print(f, labels)
+
             image = draw_boxes(image, (boxes, scores, labels))
             out_name =  os.path.join(out_path, os.path.basename(f).split('.')[0] + out_fname_mod)           
             cv2.imwrite(out_name, image)

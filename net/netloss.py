@@ -55,7 +55,7 @@ class YoloLoss(object):
         self.lambda_class = YoloParams.CLASS_SCALE
 
         self.norm = False
-        self.paper_imp = False
+
 
     def coord_loss(self, y_true, y_pred):
         
@@ -70,7 +70,6 @@ class YoloLoss(object):
         norm_coord = 1
         if self.norm:
             norm_coord = K.sum(K.cast(indicator_coord > 0.0, np.float32))
-
 
         loss_xy = K.sum(K.square(b_xy - b_xy_pred) * indicator_coord, axis=[1,2,3,4])
         #loss_wh = K.sum(K.square(b_wh - b_wh_pred) * indicator_coord, axis=[1,2,3,4])
@@ -97,32 +96,28 @@ class YoloLoss(object):
         if self.norm:
             norm_conf = K.sum(K.cast((indicator_obj + indicator_noobj)  > 0.0), np.float32)
 
-        loss_obj = K.sum(K.square(b_o-b_o_pred) * (indicator_obj + indicator_noobj), axis=[1,2,3])
+        indicator_o = indicator_obj + indicator_noobj
+        loss_obj = K.sum(K.square(b_o-b_o_pred) * indicator_o, axis=[1,2,3])
 
         return loss_obj / (norm_conf + EPSILON) / 2
 
 
     def class_loss(self, y_true, y_pred):
 
-        b_class = K.argmax(y_true[..., 5:], axis=-1)
-        b_class_pred = y_pred[..., 5:]
+        p_c_pred = K.softmax(y_pred[..., 5:])
+        p_c = K.one_hot(K.argmax(y_true[..., 5:], axis=-1), YoloParams.NUM_CLASSES)
+        loss_class_arg = K.sum(K.square(p_c - p_c_pred), axis=-1)
+        
+        #b_class = K.argmax(y_true[..., 5:], axis=-1)
+        #b_class_pred = y_pred[..., 5:]
+        #loss_class_arg = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=b_class, logits=b_class_pred)
 
         indicator_class = y_true[..., 4] * K.gather(
             YoloParams.CLASS_WEIGHTS, b_class) * self.lambda_class
 
         norm_class = 1
         if self.norm:
-            norm_class = K.sum(K.cast(indicator_class > 0.0, np.float32))
-
-        loss_class_arg = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            labels=b_class, logits=b_class_pred)
-
-        '''
-        if self.paper_imp:
-            loss_class_arg = 
-
-        '''
-
+            norm_class = K.sum(K.cast(indicator_class > 0.0, np.float32))        
 
         loss_class = K.sum(loss_class_arg * indicator_class, axis=[1,2,3])
 
