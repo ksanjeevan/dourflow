@@ -3,6 +3,7 @@ import pickle, argparse, json, cv2, os
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from keras import backend as K
 from keras.layers import Lambda
@@ -123,61 +124,52 @@ class YoloV2(object):
             plt.figure(figsize=(10,10))
 
             boxes, scores, _, labels = self.inf_model.predict(image.copy())
-
-            print(f, labels)
-
+            #print(f, labels)
             image = draw_boxes(image, (boxes, scores, labels))
             out_name =  os.path.join(out_path, os.path.basename(f).split('.')[0] + out_fname_mod)           
             cv2.imwrite(out_name, image)
+    
 
-
-    def video_inference(self, filename):
-
-        cap = cv2.VideoCapture(filename)    
+    def _video_params(self, name):
+        
+        cap = cv2.VideoCapture(name)    
         video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         size = (video_width, video_height)
         fps = round(cap.get(cv2.CAP_PROP_FPS))
 
-        fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
+        return cap, size, video_len, fps
 
+    def video_inference(self, filename):
+
+        cap, size, video_len, fps = self._video_params(filename)
+
+        fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
         writer = cv2.VideoWriter(filename.split('.')[0]+"_pred.mp4", fourcc, fps, size)
         
         for i in tqdm(range(video_len)):
-        #while(cap.isOpened()):
 
             ret, frame = cap.read()
-            #if ret==True:
 
             boxes, scores, _, labels = self.inf_model.predict(frame)
-
             frame_pred = draw_boxes(frame, (boxes, scores, labels))
 
             writer.write(frame_pred)
 
-            #cv2.imshow('Output',frame_pred)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            #else:
-            #    break
-
+            
         cap.release()
         writer.release()
         cv2.destroyAllWindows()
 
 
     def cam_inference(self, fname):
-        
-        cap = cv2.VideoCapture(0)    
-        video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        size = (video_width, video_height)
-        fps = round(cap.get(cv2.CAP_PROP_FPS))
+
+        cap, size, _, fps = self._video_params(0)
 
         fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-
         if fname: writer = cv2.VideoWriter("out.mp4", fourcc, fps, size)
 
         while(cap.isOpened()):
@@ -215,12 +207,16 @@ class YoloV2(object):
             print("AP( %s ): %.3f"%(class_label, ap))
             mAP_values.append( ap )
 
+        # Store AP results as csv
+        #df_ap = pd.DataFrame.from_dict(AP, orient='index')
+        #df_ap.loc['mAP'] = df_ap.mean()
+        #df_ap.to_csv('validation_maP.csv', header=False)
+
         print('-------------------------------')
         print("mAP: %.3f"%(np.mean(mAP_values)))
-
+        
         return AP
         
-
 
     def training(self):
 
@@ -265,6 +261,8 @@ class YoloV2(object):
                         epsilon=1e-08, 
                         decay=0.0)
 
+
+        # add metrics..
         self.model.compile(loss=self.yolo_loss, optimizer=optimizer) #, metrics=['accuracy'])
 
         self.model.fit_generator(
