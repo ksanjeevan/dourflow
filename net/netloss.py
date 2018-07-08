@@ -94,7 +94,7 @@ class YoloLoss(object):
 
         norm_conf = 1
         if self.norm:
-            norm_conf = K.sum(K.cast((indicator_obj + indicator_noobj)  > 0.0), np.float32)
+            norm_conf = K.sum(K.cast((indicator_obj + indicator_noobj)  > 0.0, np.float32))
 
         indicator_o = indicator_obj + indicator_noobj
         loss_obj = K.sum(K.square(b_o-b_o_pred) * indicator_o, axis=[1,2,3])
