@@ -72,15 +72,19 @@ class YoloParams(object):
     PREDICT_IMAGE = ''
     WEIGHT_FILE = ''
     WEBCAM_OUT = ''
+    GEN_ANCHORS_PATH = ''
 
-    if action == 'gen':
+    if action in ['genw', 'generate_weights']:
         assert args.weight_file, "Need to pass weight file if generating model."
         WEIGHT_FILE = args.weight_file
     elif action == 'cams':
         WEBCAM_OUT = 'cam_out.mp4'
         YOLO_MODE = 'cam'
+    elif action in ['genp', 'generate_priors']:
+        GEN_ANCHORS_PATH = 'new_anchors.png'
+        YOLO_MODE = 'genp'
     else:
-        if action == 'validate' or action == 'train' or action == 'cam':
+        if action in ['validate', 'train', 'cam']:
             YOLO_MODE = action
         else:
             if os.path.isdir(action):

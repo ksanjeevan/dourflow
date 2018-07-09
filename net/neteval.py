@@ -4,13 +4,45 @@
 from net.netparams import YoloParams
 from net.netdecode import YoloOutProcess
 
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2, os
 import keras
-from net.utils import draw_boxes, compute_iou, mkdir_p, yolo_normalize, mkdir_p, handle_empty_indexing
+from net.utils import draw_boxes, compute_iou, mkdir_p, \
+yolo_normalize, mkdir_p, handle_empty_indexing, parse_annotation
 
-from tqdm import tqdm
+
+
+
+'''
+def exrtract_wh(img):
+    result = []
+    pixel_height = img['height']
+    pixel_width = img['width']
+
+    fact_pixel_grid_h = YoloParams.GRID_SIZE / pixel_height
+    fact_pixel_grid_w = YoloParams.GRID_SIZE / pixel_width
+
+    for obj in img['object']:
+        grid_h = (obj['ymax'] - obj['ymin']) *  fact_pixel_grid_h
+        grid_w = (obj['xmax'] - obj['xmin']) *  fact_pixel_grid_w
+        
+        result.append( np.array(grid_h, grid_w) )
+
+    return result
+
+def gen_anchors(fname):
+
+    imgs, _ = parse_annotation(ann_dir, img_dir)
+
+    data_wh = []
+    for img in imgs:
+        data_wh += exrtract_wh(img)
+
+    c = AgglomerativeClustering(self.num_clusters, affinity='precomputed', linkage=self.c_type)
+
+'''
 
 
 

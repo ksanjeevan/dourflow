@@ -206,6 +206,9 @@ def parse_annotation(ann_dir, img_dir, labels=[]):
 
 
 
+
+
+
 def yolo_normalize(image):
     return image / 255.
 
