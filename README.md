@@ -27,16 +27,23 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 ```bash
 python3 dourflow.py path/to/test_image
 ```
+3. Use on webcam (press 'q' to quit):
+```bash
+python3 dourflow.py cam
+```
 
 ### Usage
 ---
 Running `python3 dourflow.py --help`:
 
 ```bash
+usage: dourflow.py [-h] [-m MODEL] [-c CONF] [-t THRESHOLD] [-w WEIGHT_FILE]
+                   action
+
 dourflow: a keras YOLO V2 implementation.
 
 positional arguments:
-  action                what to do: 'train', 'validate' or pass an image
+  action                what to do: 'train', 'validate', 'cam' or pass a video, image
                         file/dir.
 
 optional arguments:
@@ -49,8 +56,9 @@ optional arguments:
   -w WEIGHT_FILE, --weight_file WEIGHT_FILE
                         path to weight file
 
+
 ```
-##### *action*
+#### *action* [positional]
 Pass what to do with dourflow:
 
 1. A path to an image file/dir or video: Run inference on those file(s).
@@ -58,13 +66,13 @@ Pass what to do with dourflow:
 3. 'validate': Perform validation on a trained model.
 4. 'train': Perform training on your own dataset.
 
-##### *model*
+#### *model* [-m]
 Pass the keras input model h5 file (could be to perform inference, validate against or for transfer learning). 
 
 Pretrained COCO/VOC keras models can be downloaded [here](https://drive.google.com/open?id=1bc_kyb_wpOedHAXruj_TN5uIr7D4D_mc). Alternatively, you can download the weights from [here](https://pjreddie.com/darknet/yolov2/) and generate the model file using [YAD2K](https://github.com/allanzelener/YAD2K).
   
 
-##### *conf*
+#### *conf* [-c]
 Pass a config.json file that looks like this (minus the comments!):
 
 ```
@@ -101,18 +109,15 @@ Pass a config.json file that looks like this (minus the comments!):
     }
 }
 ``` 
-##### *threshold*
+#### *threshold* [-t]
 
 Pass the confidence threshold used for detection (default is 30%).
 
-##### *weight_file*
-
-Pass the h5 weight file if generating the YOLO v2 input model. (not needed)
 
 ### Inference
 ---
 ##### Single Image/Video
-Will generate a file in the same directory with a '_pred' name extension. Example:
+Will generate a file in the same directory with an '_pred' name extension. Example:
 ```bash
 python3 dourflow.py theoffice.png -m coco_model.h5 -c coco_config.json -t 0.35
 ```
@@ -205,6 +210,7 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 - [ ] Anchor generation for custom datasets
 - [ ] mAP write up
 - [x] Add webcam support
+- [ ] Data Augmentation
 
 #### Inspired from
 

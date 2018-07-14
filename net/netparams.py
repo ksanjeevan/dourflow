@@ -10,8 +10,8 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
     'action',
-    help='what to do: \'train\', \'validate\' or pass an image file/dir.')
-
+    help='what to do: \'train\', \'validate\', \'cam\' '
+    'or pass a video, image file/dir.')
 
 argparser.add_argument(
     '-m',

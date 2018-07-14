@@ -63,9 +63,8 @@ class YoloOutProcess(object):
         selected_scores = K.gather(flatten_scores, selected_indices)
         selected_classes = K.gather(flatten_classes, selected_indices)
 
-        # Repassem aixo vale
-        score_mask = selected_scores>self.detection_threshold
-
+        # Exclude padding boxes left behind by tensorflow NMS
+        score_mask = selected_scores>0.
         selected_boxes = tf.boolean_mask(selected_boxes, score_mask)  
         selected_scores = tf.boolean_mask(selected_scores, score_mask)  
         selected_classes = tf.boolean_mask(selected_classes, score_mask)  
