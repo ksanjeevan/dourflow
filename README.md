@@ -22,10 +22,10 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 ### Simple use
 ---
 1. Download pretrained [model](https://drive.google.com/open?id=1khOgS8VD-paUD8KhjOLOzEXkzaXNAAMq) and place it in **dourflow/**.
-2. Predict on an image:
+2. Predict on an [image](https://images.pexels.com/photos/349758/hummingbird-bird-birds-349758.jpeg?auto=compress&cs=tinysrgb&h=350):
 
 ```bash
-python3 dourflow.py path/to/test_image
+python3 dourflow.py bird.jpg
 ```
 3. Use on webcam (press 'q' to quit):
 ```bash
