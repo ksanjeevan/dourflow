@@ -6,12 +6,54 @@ from keras.layers.merge import concatenate
 
 import tensorflow as tf
 import numpy as np
-import pickle, argparse, json, os
+import pickle, argparse, json, os, cv2
 
 from keras.utils.vis_utils import plot_model
 
 from net.netparams import YoloParams
 from net.netdecode import YoloOutProcess
+
+
+
+class YoloInferenceModel(object):
+
+    def __init__(self, model):
+        self._yolo_out = YoloOutProcess()
+        self._inf_model = self._extend_processing(model)
+
+    def _extend_processing(self, model):
+        output = Lambda(self._yolo_out, name='lambda_2')(model.output)
+        return Model(model.input, output)
+
+
+    def _prepro_single_image(self, image):
+        image = cv2.resize(image, 
+            (YoloParams.INPUT_SIZE, YoloParams.INPUT_SIZE))
+        # yolo normalize
+        image = image / 255.
+        image = image[:,:,::-1]
+        # cv2 has the channel as bgr, revert to to rgb for Yolo Pass
+        image = np.expand_dims(image, 0)
+
+        return image
+
+    def predict(self, image):
+
+        image = self._prepro_single_image(image)
+        output = self._inf_model.predict(image)[0]
+
+        if output.size == 0:
+            return [np.array([])]*4
+
+        boxes = output[:,:4]
+        scores = output[:,4]
+        label_idxs = output[:,5].astype(int)
+
+        labels = [YoloParams.CLASS_LABELS[l] for l in label_idxs]
+
+        return boxes, scores, label_idxs, labels 
+
+
 
 
 class YoloArchitecture(object):
@@ -21,9 +63,9 @@ class YoloArchitecture(object):
         self.in_model_name = YoloParams.IN_MODEL
         self.plot_name = YoloParams.ARCH_FNAME
 
-    def get_model(self, loss_func):
+    def get_model(self):
 
-        yolo_model = self._load_yolo_model(loss_func)
+        yolo_model = self._load_yolo_model()
 
         if YoloParams.YOLO_MODE == 'train':
             new_yolo_model = self._setup_transfer_learning(yolo_model)
@@ -43,11 +85,11 @@ class YoloArchitecture(object):
         return new_yolo_model
 
 
-    def _load_yolo_model(self, loss_func):
-        # Error if not compiled with yolo_loss?
+    def _load_yolo_model(self):
         if os.path.isfile(self.in_model_name):
-            model = load_model(self.in_model_name,
-                custom_objects={'yolo_loss': loss_func})
+            
+            model = load_model(self.in_model_name, compile=False)
+            
             return model
         else:
             raise ValueError('Need to load full model in order to do '

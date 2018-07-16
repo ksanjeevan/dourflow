@@ -1,18 +1,16 @@
 
-
-
 from net.netparams import YoloParams
-from net.netdecode import YoloOutProcess
 
+import tensorflow as tf
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2, os
 import keras
 from net.utils import draw_boxes, compute_iou, mkdir_p, \
-yolo_normalize, mkdir_p, handle_empty_indexing, parse_annotation
+mkdir_p, handle_empty_indexing, parse_annotation
 
-
+from keras import backend as K
 
 
 '''
@@ -174,7 +172,7 @@ class YoloDataGenerator(keras.utils.Sequence):
                 y_batch[j, grid_y, grid_x, anchor_winner, 4+1+obj_indx] = 1
                 
                 # number of labels per instance !> than true_box_buffer, add check in processing (?)
-            x_batch[j] = yolo_normalize(img)
+            x_batch[j] = img / 255.
 
         ############################################################
         # x_batch -> list of input images
@@ -313,10 +311,7 @@ class YoloEvaluate(object):
 
         return self._interp_ap(np.array(precision), np.array(recall))
 
-
-
-
-    def __call__(self):
+    def comp_map(self):
 
         detection_results = []
         detection_labels = np.array([0]*YoloParams.NUM_CLASSES)
@@ -350,6 +345,122 @@ class YoloEvaluate(object):
 
         return ap_dic
 
+
+
+class Callback_MAP(keras.callbacks.Callback):
+
+    def __init__(self, generator, model, tensorboard):
+
+        self.yolo_eval = YoloEvaluate(generator=generator, model=model)
+        self.tensorboard = tensorboard
+
+    def on_epoch_end(self, epoch, logs={}):
+        
+        mAP_dict = self.yolo_eval.comp_map()
+
+        summary = tf.Summary()
+        summary_value = summary.value.add()
+        summary_value.simple_value = np.mean(list(mAP_dict.values()))
+        summary_value.tag = "mAP"
+        #self.tensorboard.writer.add_summary(summary, epoch)
+
+        self.tensorboard.val_writer.add_summary(summary, epoch)
+
+
+        self.tensorboard.val_writer.flush()
+
+
+
+
+def yolo_recall(y_true, y_pred):
+
+    truth = y_true[...,4]
+
+    pred_scores = K.expand_dims(K.sigmoid(y_pred[..., 4]), axis=-1) * K.softmax(y_pred[...,5:])
+    preds = K.cast(K.max(pred_scores, axis=-1) > YoloParams.DETECTION_THRESHOLD, np.float32)
+
+    tp = K.sum(truth * preds) 
+    tpfn = K.sum(truth)
+
+    return tp / (tpfn + 1e-8)
+
+
+
+# https://stackoverflow.com/questions/47877475/keras-tensorboard-plot-train-and-validation-scalars-in-a-same-figure?rq=1
+
+def in_loss_decmop(k):
+    return any([term in k for term in ['coord','obj','class']])
+
+class YoloTensorBoard(keras.callbacks.TensorBoard):
+    def __init__(self, log_dir='./logs', **kwargs):
+        # Make the original `TensorBoard` log to a subdirectory 'training'
+        training_log_dir = os.path.join(log_dir, 'training')
+        super(YoloTensorBoard, self).__init__(training_log_dir, **kwargs)
+
+        # Log the validation metrics to a separate subdirectory
+        self.val_log_dir = os.path.join(log_dir, 'validation')
+
+
+        self.loss_dir = {
+                'training':{
+                    'coord':os.path.join(training_log_dir, 'coordinate'),
+                    'obj':os.path.join(training_log_dir, 'confidence'),
+                    'class':os.path.join(training_log_dir, 'class')
+                },
+                'validation':{
+                    'coord':os.path.join(self.val_log_dir, 'coordinate'),
+                    'obj':os.path.join(self.val_log_dir, 'confidence'),
+                    'class':os.path.join(self.val_log_dir, 'class')
+                }
+        }
+
+    def set_model(self, model):
+        # Setup writer for validation metrics
+        self.val_writer = tf.summary.FileWriter(self.val_log_dir)
+
+        self.loss_writer = {}
+        for k,v in self.loss_dir.items():
+            self.loss_writer[k] = {}
+            for l,m in v.items():
+                self.loss_writer[k][l] = tf.summary.FileWriter(m) 
+
+        super(YoloTensorBoard, self).set_model(model)
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+
+        loss_logs = {k:v for k, v in logs.items() if in_loss_decmop(k)}
+        logs = {k:v for k, v in logs.items() if not in_loss_decmop(k)}
+        
+        for name, value in loss_logs.items():
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.simple_value = value.item()
+            
+            decomp_part = name.replace('val_', '').replace('l_', '')
+
+            key = ('val', 'validation') if name.startswith('val_') else ('train', 'training')
+        
+            summary_value.tag = key[0] + '_loss_decomp'    
+            self.loss_writer[key[1]][decomp_part].add_summary(summary, epoch)
+            self.loss_writer[key[1]][decomp_part].flush()
+
+
+        val_logs = {k.replace('val_', ''): v for k, v in logs.items() if k.startswith('val_')}
+        for name, value in val_logs.items():
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.simple_value = value.item()
+            summary_value.tag = name
+            self.val_writer.add_summary(summary, epoch)
+        self.val_writer.flush()
+
+        logs = {k: v for k, v in logs.items() if not k.startswith('val_')}
+        super(YoloTensorBoard, self).on_epoch_end(epoch, logs)
+
+    def on_train_end(self, logs=None):
+        super(YoloTensorBoard, self).on_train_end(logs)
+        self.val_writer.close()
 
 
 

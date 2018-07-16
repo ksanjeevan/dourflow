@@ -118,7 +118,6 @@ class YoloParams(object):
     CLASS_LABELS = [x.rstrip() for x in open(config['config_path']['labels'])]
     NUM_CLASSES = len(CLASS_LABELS)
     CLASS_TO_INDEX = dict(zip(CLASS_LABELS, np.arange(NUM_CLASSES)))
-    CLASS_WEIGHTS = np.ones(NUM_CLASSES, dtype='float32')
 
     # Infrastructure params
     INPUT_SIZE = config['model']['input_size']

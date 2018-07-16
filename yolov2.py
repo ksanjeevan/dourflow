@@ -11,53 +11,17 @@ from keras.models import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from keras.optimizers import SGD, Adam, RMSprop
 
-from net.utils import parse_annotation, yolo_normalize, mkdir_p, \
-setup_logging, TrainValTensorBoard, draw_boxes
+from net.utils import parse_annotation, mkdir_p, \
+setup_logging, draw_boxes
 
 from net.netparams import YoloParams
 from net.netloss import YoloLoss
-from net.neteval import YoloDataGenerator, YoloEvaluate
-from net.netdecode import YoloOutProcess
-from net.netarch import YoloArchitecture
+from net.neteval import YoloDataGenerator, YoloEvaluate, \
+YoloTensorBoard, Callback_MAP, yolo_recall
+
+from net.netarch import YoloArchitecture, YoloInferenceModel
 
 
-class YoloInferenceModel(object):
-
-    def __init__(self, model):
-        self._yolo_out = YoloOutProcess()
-        self._inf_model = self._extend_processing(model)
-
-    def _extend_processing(self, model):
-        output = Lambda(self._yolo_out, name='lambda_2')(model.output)
-        return Model(model.input, output)
-
-
-    def _prepro_single_image(self, image):
-        image = cv2.resize(image, 
-            (YoloParams.INPUT_SIZE, YoloParams.INPUT_SIZE))
-        # yolo normalize
-        image = yolo_normalize(image)
-        image = image[:,:,::-1]
-        # cv2 has the channel as bgr, revert to to rgb for Yolo Pass
-        image = np.expand_dims(image, 0)
-
-        return image
-
-    def predict(self, image):
-
-        image = self._prepro_single_image(image)
-        output = self._inf_model.predict(image)[0]
-
-        if output.size == 0:
-            return [np.array([])]*4
-
-        boxes = output[:,:4]
-        scores = output[:,4]
-        label_idxs = output[:,5].astype(int)
-
-        labels = [YoloParams.CLASS_LABELS[l] for l in label_idxs]
-
-        return boxes, scores, label_idxs, labels 
 
 
 
@@ -75,25 +39,24 @@ class YoloV2(object):
 
     def run(self, **kwargs):
 
-        self.model = self.yolo_arch.get_model(self.yolo_loss)
+        self.model = self.yolo_arch.get_model()
         
+        self.inf_model = YoloInferenceModel(self.model)
+
         if YoloParams.YOLO_MODE == 'train':
             self.training()
 
-        else: 
-            self.inf_model = YoloInferenceModel(self.model)
+        elif YoloParams.YOLO_MODE == 'inference':
+            self.inference(YoloParams.PREDICT_IMAGE)
 
-            if YoloParams.YOLO_MODE == 'inference':
-                self.inference(YoloParams.PREDICT_IMAGE)
+        elif YoloParams.YOLO_MODE == 'validate':
+            self.validation()
 
-            elif YoloParams.YOLO_MODE == 'validate':
-                self.validation()
+        elif YoloParams.YOLO_MODE == 'video':
+            self.video_inference(YoloParams.PREDICT_IMAGE)
 
-            elif YoloParams.YOLO_MODE == 'video':
-                self.video_inference(YoloParams.PREDICT_IMAGE)
-
-            elif YoloParams.YOLO_MODE == 'cam':
-                self.cam_inference(YoloParams.WEBCAM_OUT)
+        elif YoloParams.YOLO_MODE == 'cam':
+            self.cam_inference(YoloParams.WEBCAM_OUT)
 
 
         # Sometimes bug: https://github.com/tensorflow/tensorflow/issues/3388
@@ -200,7 +163,7 @@ class YoloV2(object):
         generator = YoloDataGenerator(valid_data, shuffle=True)
 
         yolo_eval = YoloEvaluate(generator=generator, model=self.inf_model)
-        AP = yolo_eval()
+        AP = yolo_eval.comp_map()
 
         mAP_values = []
         for class_label, ap in AP.items():
@@ -248,7 +211,7 @@ class YoloV2(object):
                                 period=1)
 
         #tb_path = os.path.join(log_path, )
-        tensorboard = TrainValTensorBoard(
+        tensorboard = YoloTensorBoard(
                             log_dir=log_path,
                             histogram_freq=0,
                             write_graph=True,
@@ -262,8 +225,26 @@ class YoloV2(object):
                         decay=0.0)
 
 
+
+        map_cbck = Callback_MAP(generator=valid_gen, 
+                                model=self.inf_model, 
+                                tensorboard=tensorboard)
+
+
         # add metrics..
-        self.model.compile(loss=self.yolo_loss, optimizer=optimizer) #, metrics=['accuracy'])
+        yolo_recall.__name__ = 'recall'
+        
+        metrics = [
+            self.yolo_loss.l_coord,
+            self.yolo_loss.l_obj,
+            self.yolo_loss.l_class,
+            yolo_recall
+        ]
+
+
+        self.model.compile(loss=self.yolo_loss, 
+                            optimizer=optimizer, 
+                            metrics=metrics)
 
         self.model.fit_generator(
                         generator=train_gen,
@@ -271,7 +252,7 @@ class YoloV2(object):
                         verbose=YoloParams.TRAIN_VERBOSE, 
                         validation_data=valid_gen,
                         validation_steps=len(valid_gen),
-                        callbacks=[early_stop, checkpoint, tensorboard], 
+                        callbacks=[early_stop, checkpoint, tensorboard, map_cbck], 
                         epochs=YoloParams.NUM_EPOCHS,
                         max_queue_size=20)
 

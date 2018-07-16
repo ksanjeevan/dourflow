@@ -112,8 +112,7 @@ class YoloLoss(object):
         #b_class_pred = y_pred[..., 5:]
         #loss_class_arg = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=b_class, logits=b_class_pred)
 
-        indicator_class = y_true[..., 4] * K.gather(
-            YoloParams.CLASS_WEIGHTS, b_class) * self.lambda_class
+        indicator_class = y_true[..., 4] * self.lambda_class
 
         norm_class = 1
         if self.norm:
@@ -133,6 +132,16 @@ class YoloLoss(object):
         return K.concatenate([y_pred_xy, y_pred_wh, y_pred_conf, y_pred_class], axis=-1)
 
 
+    def l_coord(self, y_true, y_pred_raw):
+        return self.coord_loss(y_true, self._transform_netout(y_pred_raw))
+
+    def l_obj(self, y_true, y_pred_raw):
+        return self.obj_loss(y_true, self._transform_netout(y_pred_raw))
+
+    def l_class(self, y_true, y_pred_raw):
+        return self.class_loss(y_true, self._transform_netout(y_pred_raw))
+
+
 
     def __call__(self, y_true, y_pred_raw):
 
@@ -143,11 +152,6 @@ class YoloLoss(object):
         total_class_loss = self.class_loss(y_true, y_pred)
 
         loss = total_coord_loss + total_obj_loss + total_class_loss
-
-        #loss = tf.Print(loss, [total_coord_loss], message='\nCoord Loss \t', summarize=1000)
-        #loss = tf.Print(loss, [total_obj_loss], message='Conf Loss \t', summarize=1000)
-        #oss = tf.Print(loss, [total_class_loss], message='Class Loss \t', summarize=1000)
-        #oss = loss = tf.Print(loss, [loss], message='Total Loss \t', summarize=1000)
 
         return  loss
 

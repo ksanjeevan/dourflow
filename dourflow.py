@@ -4,7 +4,7 @@ from net.netparams import YoloParams
 from yolov2 import YoloV2, YoloInferenceModel
 import os
 
-from net.neteval import gen_anchors
+#from net.neteval import gen_anchors
 
 
 # Add CPU option
