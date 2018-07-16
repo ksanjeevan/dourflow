@@ -188,17 +188,17 @@ Script to generate training/testing splits.
 
 ##### Tensorboard
 
-Training will create directory **logs/** which will store loss and checkpoints for all the different runs during training.
+Training will create directory **logs/** which will store metrics and checkpoints for all the different training runs.
  
 Model passed is used for [transfer learning](https://en.wikipedia.org/wiki/Transfer_learning) (TRAINING FROM SCRATCH / TRAINING ONLY LAST LAYER SHOULD BE ADDED SOON).
 
 Example:
 `python3 dourflow.py train -m models/logo/coco_model.h5 -c confs/config_custom.json`
 
-Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and open a browser page at `http://localhost:6006/` to monitor the train/val loss:
+Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and open a browser page at `http://localhost:6006/` to monitor the loss, mAP, recall:
 
 <p align="center">
-<img src="result_plots/tbexam.png" width="600px"/>
+<img src="result_plots/tbexam.png" width="750px"/>
 </p>
 
 
@@ -211,6 +211,7 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 - [ ] mAP write up
 - [x] Add webcam support
 - [ ] Data Augmentation
+- [x] TensorBoard metrics
 
 #### Inspired from
 
