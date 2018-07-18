@@ -157,7 +157,7 @@ class YoloV2(object):
 
     def validation(self):
 
-        valid_data, _ = parse_annotation(
+        valid_data = parse_annotation(
             YoloParams.VALIDATION_ANN_PATH, YoloParams.VALIDATION_IMG_PATH)
 
         generator = YoloDataGenerator(valid_data, shuffle=True)
@@ -183,9 +183,9 @@ class YoloV2(object):
 
     def training(self):
 
-        train_data, _ = parse_annotation(
+        train_data = parse_annotation(
             YoloParams.TRAIN_ANN_PATH, YoloParams.TRAIN_IMG_PATH)
-        valid_data, _ = parse_annotation(
+        valid_data = parse_annotation(
             YoloParams.VALIDATION_ANN_PATH, YoloParams.VALIDATION_IMG_PATH)
 
         train_gen = YoloDataGenerator(train_data, shuffle=True)

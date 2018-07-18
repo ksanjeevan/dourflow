@@ -186,6 +186,14 @@ Script to generate training/testing splits.
 `python3 split_dataset.py -p 0.75 --in_ann VOC2012/Annotations/ --in_img VOC2012/JPEGImages/ --output ~/Documents/DATA/VOC`
 
 
+##### Anchor Generation
+
+Running:
+
+`python3 dourflow.py genp -c config.json`
+
+Will store your the bounding box priors wherever the path indicates in the config file under **config['config_path']['anchors']** with the prefix 'custom_' (so as to not overwrite accidentally).
+
 ##### Tensorboard
 
 Training will create directory **logs/** which will store metrics and checkpoints for all the different training runs.
@@ -207,7 +215,7 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 #### To Do
 
 - [ ] cfg parser
-- [ ] Anchor generation for custom datasets
+- [x] Anchor generation for custom datasets
 - [ ] mAP write up
 - [x] Add webcam support
 - [ ] Data Augmentation

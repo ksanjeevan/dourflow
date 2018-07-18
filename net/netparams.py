@@ -81,7 +81,9 @@ class YoloParams(object):
         WEBCAM_OUT = 'cam_out.mp4'
         YOLO_MODE = 'cam'
     elif action in ['genp', 'generate_priors']:
-        GEN_ANCHORS_PATH = 'new_anchors.png'
+        current_anchors_path = config['config_path']['anchors']
+        GEN_ANCHORS_PATH = os.path.join(os.path.dirname(current_anchors_path),
+         'custom_'+os.path.basename(current_anchors_path))
         YOLO_MODE = 'genp'
     else:
         if action in ['validate', 'train', 'cam']:
@@ -123,26 +125,27 @@ class YoloParams(object):
     INPUT_SIZE = config['model']['input_size']
     GRID_SIZE = config['model']['grid_size']
     TRUE_BOX_BUFFER = config['model']['true_box_buffer']
-    ANCHORS = [float(a) for a in open(config['config_path']['anchors']).read().split(', ')]
+    
+    if config['config_path']['anchors']:
+        ANCHORS = [float(a) for a in open(config['config_path']['anchors']).read().split(', ')]
+        NUM_BOUNDING_BOXES = len(ANCHORS) // 2
+        OBJECT_SCALE = 5.0
+        NO_OBJECT_SCALE  = 1.0
+        CLASS_SCALE = 1.0
+        COORD_SCALE = 1.0
 
-    NUM_BOUNDING_BOXES = len(ANCHORS) // 2
-    OBJECT_SCALE = 5.0
-    NO_OBJECT_SCALE  = 1.0
-    CLASS_SCALE = 1.0
-    COORD_SCALE = 1.0
+        # Train params
+        BATCH_SIZE = config['train']['batch_size']
+        L_RATE = config['train']['learning_rate']
+        NUM_EPOCHS = config['train']['num_epochs']
+        TRAIN_VERBOSE = config['train']['verbose']
 
-    # Train params
-    BATCH_SIZE = config['train']['batch_size']
-    L_RATE = config['train']['learning_rate']
-    NUM_EPOCHS = config['train']['num_epochs']
-    TRAIN_VERBOSE = config['train']['verbose']
+        # Thresholding
+        IOU_THRESHOLD = get_threshold(config['model']['iou_threshold'])
+        NMS_THRESHOLD = get_threshold(config['model']['nms_threshold'])
+        DETECTION_THRESHOLD = get_threshold(args.threshold)
 
-    # Thresholding
-    IOU_THRESHOLD = get_threshold(config['model']['iou_threshold'])
-    NMS_THRESHOLD = get_threshold(config['model']['nms_threshold'])
-    DETECTION_THRESHOLD = get_threshold(args.threshold)
-
-    # Additional / Precomputing  
-    c_grid = generate_yolo_grid(BATCH_SIZE, GRID_SIZE, NUM_BOUNDING_BOXES)
-    anchors = np.reshape(ANCHORS, [1,1,1,NUM_BOUNDING_BOXES,2])
+        # Additional / Precomputing  
+        c_grid = generate_yolo_grid(BATCH_SIZE, GRID_SIZE, NUM_BOUNDING_BOXES)
+        anchors = np.reshape(ANCHORS, [1,1,1,NUM_BOUNDING_BOXES,2])
 

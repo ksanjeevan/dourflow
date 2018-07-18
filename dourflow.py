@@ -4,7 +4,7 @@ from net.netparams import YoloParams
 from yolov2 import YoloV2, YoloInferenceModel
 import os
 
-#from net.neteval import gen_anchors
+from kmeans_anchors import gen_anchors
 
 
 # Add CPU option
@@ -17,8 +17,7 @@ if __name__ == '__main__':
     if YoloParams.WEIGHT_FILE:
         generate_model()
     elif YoloParams.GEN_ANCHORS_PATH:
-        pass
-        #gen_anchors(YoloParams.GEN_ANCHORS_PATH)
+        gen_anchors(YoloParams.GEN_ANCHORS_PATH)
     else:
         YoloV2().run()
         

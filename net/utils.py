@@ -200,12 +200,7 @@ def parse_annotation(ann_dir, img_dir, labels=[]):
             }
     """
     # seen_labels: {'classname': count}
-    return all_imgs, seen_labels
-
-
-
-
-
+    return all_imgs
 
 
 def setup_logging(logging_path='logs'):
@@ -225,6 +220,8 @@ def setup_logging(logging_path='logs'):
         '\t\'tensorboard --logdir=%s\'\n'%run_path)
 
     return run_path
+
+
 
 
 def handle_empty_indexing(arr, idx):
