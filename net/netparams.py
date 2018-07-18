@@ -112,6 +112,9 @@ class YoloParams(object):
     # Model    
     #IN_MODEL = config['config_path']['in_model']
     IN_MODEL = args.model
+
+    assert os.path.isfile(IN_MODEL), "Pass valid input keras model."
+
     OUT_MODEL_NAME = config['train']['out_model_name']
     
     ARCH_FNAME = config['config_path']['arch_plotname']
