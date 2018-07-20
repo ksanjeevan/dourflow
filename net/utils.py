@@ -234,7 +234,7 @@ def handle_empty_indexing(arr, idx):
 
 def generate_gif(filename):
     outname = filename.split('.')[-2] + '.gif'
-    VideoFileClip(filename).write_gif(
+    VideoFileClip(filename).speedx(2.5).resize(0.5).write_gif(
         outname,fps=20, program='ffmpeg', fuzz=3)
     print('\n')
 
