@@ -18,7 +18,7 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 - [h5py](http://www.h5py.org/)
 - [opencv](https://pypi.org/project/opencv-python/)
 - [python3.5](https://www.python.org/)
-
+- [moviepy](https://zulko.github.io/moviepy/) (optional, gifs)
 ### Simple use
 ---
 1. Download pretrained [model](https://drive.google.com/open?id=1khOgS8VD-paUD8KhjOLOzEXkzaXNAAMq) and place it in **dourflow/**.
@@ -192,7 +192,7 @@ Running:
 
 `python3 dourflow.py genp -c config.json`
 
-Will store your the bounding box priors wherever the path indicates in the config file under **config['config_path']['anchors']** with the prefix 'custom_' (so as to not overwrite accidentally).
+Will store the custom bounding box priors wherever the path indicates in the config file under **config['config_path']['anchors']** with the prefix 'custom_' (so as to not overwrite accidentally).
 
 ##### Tensorboard
 

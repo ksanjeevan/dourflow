@@ -12,7 +12,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from keras.optimizers import SGD, Adam, RMSprop
 
 from net.utils import parse_annotation, mkdir_p, \
-setup_logging, draw_boxes
+setup_logging, draw_boxes, generate_gif
 
 from net.netparams import YoloParams
 from net.netloss import YoloLoss
@@ -20,8 +20,6 @@ from net.neteval import YoloDataGenerator, YoloEvaluate, \
 YoloTensorBoard, Callback_MAP, yolo_recall
 
 from net.netarch import YoloArchitecture, YoloInferenceModel
-
-
 
 
 
@@ -107,9 +105,9 @@ class YoloV2(object):
     def video_inference(self, filename):
 
         cap, size, video_len, fps = self._video_params(filename)
-
+        outname = filename.split('.')[0]+"_pred.mp4"
         fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-        writer = cv2.VideoWriter(filename.split('.')[0]+"_pred.mp4", fourcc, fps, size)
+        writer = cv2.VideoWriter(outname, fourcc, fps, size)
         
         for i in tqdm(range(video_len)):
 
@@ -127,13 +125,16 @@ class YoloV2(object):
         writer.release()
         cv2.destroyAllWindows()
 
+        if YoloParams.STORE_GIF: generate_gif(outname)
+
+
 
     def cam_inference(self, fname):
 
         cap, size, _, fps = self._video_params(0)
 
         fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-        if fname: writer = cv2.VideoWriter("out.mp4", fourcc, fps, size)
+        if fname: writer = cv2.VideoWriter(fname, fourcc, 40, size)
 
         while(cap.isOpened()):
 
@@ -150,7 +151,9 @@ class YoloV2(object):
                     break
 
         cap.release()
-        if fname: writer.release()
+        if fname: 
+            writer.release()
+            if YoloParams.STORE_GIF: generate_gif(fname)
         cv2.destroyAllWindows()  
 
 

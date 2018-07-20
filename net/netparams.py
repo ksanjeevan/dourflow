@@ -42,6 +42,12 @@ argparser.add_argument(
         default='weights.h5')
 
 
+argparser.add_argument(
+        '--gif',
+        help='video output stored as gif also',
+        action='store_true')
+
+
 args = argparser.parse_args()
 
 
@@ -101,7 +107,7 @@ class YoloParams(object):
 
             PREDICT_IMAGE = action
         
-
+    #Paths 
     TRAIN_IMG_PATH = config['train']['image_folder'] 
     TRAIN_ANN_PATH = config['train']['annot_folder']
 
@@ -109,14 +115,12 @@ class YoloParams(object):
     VALIDATION_ANN_PATH = config['valid']['annot_folder']
     VALIDATION_OUT_PATH = config['valid']['pred_folder']
 
+    STORE_GIF = args.gif
+
     # Model    
-    #IN_MODEL = config['config_path']['in_model']
     IN_MODEL = args.model
-
     assert os.path.isfile(IN_MODEL), "Pass valid input keras model."
-
     OUT_MODEL_NAME = config['train']['out_model_name']
-    
     ARCH_FNAME = config['config_path']['arch_plotname']
 
     # Classes

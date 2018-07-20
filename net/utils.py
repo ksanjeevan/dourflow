@@ -8,6 +8,8 @@ import tensorflow as tf
 import copy
 import cv2
 
+from moviepy.editor import VideoFileClip
+
 
 
 def mkdir_p(path):
@@ -229,6 +231,12 @@ def handle_empty_indexing(arr, idx):
         return arr[idx]
     return []
 
+
+def generate_gif(filename):
+    outname = filename.split('.')[-2] + '.gif'
+    VideoFileClip(filename).write_gif(
+        outname,fps=20, program='ffmpeg', fuzz=3)
+    print('\n')
 
 
 if __name__ == '__main__':
