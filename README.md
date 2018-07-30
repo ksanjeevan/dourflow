@@ -206,7 +206,7 @@ Will store the custom bounding box priors wherever the path indicates in the con
 
 Training will create directory **logs/** which will store metrics and checkpoints for all the different training runs.
  
-Model passed is used for [transfer learning](https://en.wikipedia.org/wiki/Transfer_learning).
+Model passed is used for [transfer learning](https://en.wikipedia.org/wiki/Transfer_learning) by randomizing the last layer of the network (with the appropiate size of the target classes).
 
 Example:
 `python3 dourflow.py train -m models/logo/coco_model.h5 -c confs/config_custom.json`
@@ -222,7 +222,7 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 
 #### To Do
 
-- [x] Multiclass NMS
+- [x] Multiclass Non Max Suppression
 - [x] Anchor generation for custom datasets
 - [ ] mAP write up
 - [x] Add webcam support

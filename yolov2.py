@@ -205,7 +205,7 @@ class YoloV2(object):
     
         early_stop = EarlyStopping(monitor='val_loss', 
                                min_delta=0.001, 
-                               patience=7, 
+                               patience=3, 
                                mode='min', 
                                verbose=1)
 
@@ -242,7 +242,6 @@ class YoloV2(object):
                         beta_2=0.999, 
                         decay=0.0)
         
-
 
         map_cbck = Callback_MAP(generator=valid_gen, 
                                 model=self.inf_model, 
