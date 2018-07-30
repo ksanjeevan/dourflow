@@ -105,7 +105,6 @@ def IoU_dist(x, c):
 
 
 
-
 def exrtract_wh(img):
     result = []
     pixel_height = img['height']

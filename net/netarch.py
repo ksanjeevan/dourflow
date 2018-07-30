@@ -1,17 +1,20 @@
+"""
+Set up keras model with Yolo v2 architecture, for both training
+and inference.
+"""
+import tensorflow as tf
+import numpy as np
+import pickle, argparse, json, os, cv2
+
 from keras.models import Model, load_model
 from keras.layers import Reshape, Conv2D, Input, MaxPooling2D, BatchNormalization, Lambda
 from keras.layers.advanced_activations import LeakyReLU
 
 from keras.layers.merge import concatenate
-
-import tensorflow as tf
-import numpy as np
-import pickle, argparse, json, os, cv2
-
 from keras.utils.vis_utils import plot_model
 
-from net.netparams import YoloParams
-from net.netdecode import YoloOutProcess
+from .netparams import YoloParams
+from .netdecode import YoloOutProcess
 
 
 
@@ -20,6 +23,7 @@ class YoloInferenceModel(object):
     def __init__(self, model):
         self._yolo_out = YoloOutProcess()
         self._inf_model = self._extend_processing(model)
+        self._model = model
 
     def _extend_processing(self, model):
         output = Lambda(self._yolo_out, name='lambda_2')(model.output)
@@ -40,6 +44,8 @@ class YoloInferenceModel(object):
     def predict(self, image):
 
         image = self._prepro_single_image(image)
+
+        #np.save('person.npy', self._model.predict(image))
         output = self._inf_model.predict(image)[0]
 
         if output.size == 0:

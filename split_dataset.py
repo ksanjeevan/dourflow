@@ -6,7 +6,7 @@ from random import shuffle
 import argparse
 
 from tqdm import tqdm
-from utils import mkdir_p
+from net.utils import mkdir_p
 
 
 argparser = argparse.ArgumentParser(
@@ -40,14 +40,12 @@ def sample_from_dir(paths, train_p):
     img_path, ann_path, out_path = paths
 
     imgs = os.listdir(img_path)
-
+    
     total_num = len(imgs)
-    train_num = int(len(imgs)*train_p)
+    train_num = int(len(imgs)*float(train_p))
 
     img_fmt = '.' + imgs[0].split('.')[1]
     fns = [im.split('.')[0] for im in imgs] 
-
-    shuffle(fns)
 
     fn_train = fns[:train_num]
     fn_val = fns[train_num:]

@@ -1,5 +1,4 @@
-
-import pickle, argparse, json, cv2, os
+import cv2, os
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -11,17 +10,18 @@ from keras.models import Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from keras.optimizers import SGD, Adam, RMSprop
 
-from net.utils import parse_annotation, mkdir_p, \
-setup_logging, draw_boxes, generate_gif
-
 from net.netparams import YoloParams
-from net.netloss import YoloLoss
-from net.neteval import YoloDataGenerator, YoloEvaluate, \
-YoloTensorBoard, Callback_MAP, yolo_recall
+
+from net.utils import parse_annotation, mkdir_p, setup_logging, draw_boxes, generate_gif
 
 from net.netarch import YoloArchitecture, YoloInferenceModel
+from net.netloss import YoloLoss
+from net.neteval import YoloEvaluate, YoloTensorBoard, Callback_MAP, yolo_recall
+from net.netgen import YoloDataGenerator
 
 
+CAM_WIDTH = 1038
+CAM_HEIGHT = 576
 
 class YoloV2(object):
 
@@ -85,7 +85,7 @@ class YoloV2(object):
             plt.figure(figsize=(10,10))
 
             boxes, scores, _, labels = self.inf_model.predict(image.copy())
-            #print(f, labels)
+            print(f, list(zip(labels, scores)))
             image = draw_boxes(image, (boxes, scores, labels))
             out_name =  os.path.join(out_path, os.path.basename(f).split('.')[0] + out_fname_mod)           
             cv2.imwrite(out_name, image)
@@ -94,10 +94,17 @@ class YoloV2(object):
     def _video_params(self, name):
         
         cap = cv2.VideoCapture(name)    
-        video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if name == 0:        
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
+            size = (CAM_WIDTH, CAM_HEIGHT)
+        else:
+            video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            size = (video_width, video_height)
+
         video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        size = (video_width, video_height)
+        
         fps = round(cap.get(cv2.CAP_PROP_FPS))
 
         return cap, size, video_len, fps
@@ -134,7 +141,7 @@ class YoloV2(object):
         cap, size, _, fps = self._video_params(0)
 
         fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-        if fname: writer = cv2.VideoWriter(fname, fourcc, 40, size)
+        if fname: writer = cv2.VideoWriter(fname, fourcc, fps, size)
 
         while(cap.isOpened()):
 
@@ -144,9 +151,9 @@ class YoloV2(object):
                 boxes, scores, _, labels = self.inf_model.predict(frame)
                 frame_pred = draw_boxes(frame, (boxes, scores, labels))
 
-                if fname: writer.write(frame)
+                if fname: writer.write(frame_pred)
 
-                cv2.imshow('Yolo Output',frame)
+                cv2.imshow('Yolo Output',frame_pred)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
@@ -168,10 +175,12 @@ class YoloV2(object):
         yolo_eval = YoloEvaluate(generator=generator, model=self.inf_model)
         AP = yolo_eval.comp_map()
 
-        mAP_values = []
-        for class_label, ap in AP.items():
+
+        _AP_items = [[class_label, ap] for class_label, ap in AP.items()]
+        AP_items = sorted(_AP_items, key=lambda x: x[1], reverse=True)
+
+        for class_label, ap in AP_items:
             print("AP( %s ): %.3f"%(class_label, ap))
-            mAP_values.append( ap )
 
         # Store AP results as csv
         #df_ap = pd.DataFrame.from_dict(AP, orient='index')
@@ -179,7 +188,7 @@ class YoloV2(object):
         #df_ap.to_csv('validation_maP.csv', header=False)
 
         print('-------------------------------')
-        print("mAP: %.3f"%(np.mean(mAP_values)))
+        print("mAP: %.3f"%(np.mean(list(AP.values()))))
         
         return AP
         
@@ -191,13 +200,12 @@ class YoloV2(object):
         valid_data = parse_annotation(
             YoloParams.VALIDATION_ANN_PATH, YoloParams.VALIDATION_IMG_PATH)
 
-        train_gen = YoloDataGenerator(train_data, shuffle=True)
-        valid_gen = YoloDataGenerator(valid_data, shuffle=True)
-
-
+        train_gen = YoloDataGenerator(train_data, shuffle=True, augment=True)
+        valid_gen = YoloDataGenerator(valid_data, shuffle=True)         
+    
         early_stop = EarlyStopping(monitor='val_loss', 
                                min_delta=0.001, 
-                               patience=3, 
+                               patience=7, 
                                mode='min', 
                                verbose=1)
 
@@ -220,13 +228,20 @@ class YoloV2(object):
                             write_graph=True,
                             write_images=False)
 
+        """
+        optimizer = SGD(
+                        lr=YoloParams.L_RATE,
+                        momentum=0.9,
+                        decay=0.0005
+            )
+        """
+        
         optimizer = Adam(
                         lr=YoloParams.L_RATE, 
                         beta_1=0.9, 
                         beta_2=0.999, 
-                        epsilon=1e-08, 
                         decay=0.0)
-
+        
 
 
         map_cbck = Callback_MAP(generator=valid_gen, 
@@ -234,7 +249,7 @@ class YoloV2(object):
                                 tensorboard=tensorboard)
 
 
-        # add metrics..
+
         yolo_recall.__name__ = 'recall'
         
         metrics = [

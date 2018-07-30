@@ -112,7 +112,8 @@ def space_to_depth_x2(x):
     return tf.space_to_depth(x, block_size=2)
 
 
-def draw_boxes(image, info):
+def draw_boxes(image_in, info):
+    image = image_in.copy()
     image_h, image_w, _ = image.shape
 
     boxes, scores, labels = info

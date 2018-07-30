@@ -1,8 +1,12 @@
+"""
+Yolo v2 loss function.
+"""
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from keras import backend as K
-from net.netparams import YoloParams
+
+from .netparams import YoloParams
 
 EPSILON = 1e-7
 
@@ -10,7 +14,7 @@ EPSILON = 1e-7
 def calculate_ious(A1, A2, use_iou=True):
 
     if not use_iou: 
-        return 1.
+        return A1[..., 4]
 
     A1_xy = A1[..., 0:2]
     A1_wh = A1[..., 2:4]
@@ -19,42 +23,45 @@ def calculate_ious(A1, A2, use_iou=True):
     A2_wh = A2[..., 2:4]
     
     A1_wh_half = A1_wh / 2.
-    A1_mins    = A1_xy - A1_wh_half
-    A1_maxes   = A1_xy + A1_wh_half
+    A1_mins = A1_xy - A1_wh_half
+    A1_maxes = A1_xy + A1_wh_half
     
     A2_wh_half = A2_wh / 2.
     A2_mins = A2_xy - A2_wh_half
-    A2_maxes   = A2_xy + A2_wh_half
+    A2_maxes = A2_xy + A2_wh_half
 
     intersect_mins  = K.maximum(A2_mins,  A1_mins)
     intersect_maxes = K.minimum(A2_maxes, A1_maxes)
-    intersect_wh    = K.maximum(intersect_maxes - intersect_mins, 0.)
+    intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
     intersect_areas = intersect_wh[..., 0] * intersect_wh[..., 1]
     
     true_areas = A1_wh[..., 0] * A1_wh[..., 1]
     pred_areas = A2_wh[..., 0] * A2_wh[..., 1]
 
     union_areas = pred_areas + true_areas - intersect_areas
-    iou_scores  = intersect_areas / union_areas
+    return intersect_areas / union_areas
 
-    return iou_scores
 
+def _transform_netout(y_pred_raw):
+    y_pred_xy = K.sigmoid(y_pred_raw[..., :2]) + YoloParams.c_grid
+    y_pred_wh = K.exp(y_pred_raw[..., 2:4]) * YoloParams.anchors
+    y_pred_conf = K.sigmoid(y_pred_raw[..., 4:5])
+    y_pred_class = y_pred_raw[...,5:]
+
+    return K.concatenate([y_pred_xy, y_pred_wh, y_pred_conf, y_pred_class], axis=-1)
 
 class YoloLoss(object):
-    # WARM UP 
 
     def __init__(self):
 
         self.__name__ = 'yolo_loss'
-        self.iou_threshold = YoloParams.IOU_THRESHOLD
-        self.readjust_obj_score = True
+        self.iou_filter = 0.6
+        self.readjust_obj_score = False
 
         self.lambda_coord = YoloParams.COORD_SCALE
         self.lambda_noobj = YoloParams.NO_OBJECT_SCALE
         self.lambda_obj = YoloParams.OBJECT_SCALE
         self.lambda_class = YoloParams.CLASS_SCALE
-
-        self.norm = False
 
 
     def coord_loss(self, y_true, y_pred):
@@ -67,20 +74,16 @@ class YoloLoss(object):
 
         indicator_coord = K.expand_dims(y_true[..., 4], axis=-1) * self.lambda_coord
 
-        norm_coord = 1
-        if self.norm:
-            norm_coord = K.sum(K.cast(indicator_coord > 0.0, np.float32))
+        loss_xy = K.sum(K.square(b_xy - b_xy_pred) * indicator_coord)#, axis=[1,2,3,4])
+        loss_wh = K.sum(K.square(b_wh - b_wh_pred) * indicator_coord)#, axis=[1,2,3,4])
+        #loss_wh = K.sum(K.square(K.sqrt(b_wh) - K.sqrt(b_wh_pred)) * indicator_coord)#, axis=[1,2,3,4])
 
-        loss_xy = K.sum(K.square(b_xy - b_xy_pred) * indicator_coord, axis=[1,2,3,4])
-        #loss_wh = K.sum(K.square(b_wh - b_wh_pred) * indicator_coord, axis=[1,2,3,4])
-        loss_wh = K.sum(K.square(K.sqrt(b_wh) - K.sqrt(b_wh_pred)) * indicator_coord, axis=[1,2,3,4])
-
-        return (loss_wh + loss_xy) / (norm_coord + EPSILON) / 2
+        return (loss_wh + loss_xy) / 2
 
 
     def obj_loss(self, y_true, y_pred):
 
-        b_o = calculate_ious(y_true, y_pred, use_iou=self.readjust_obj_score) * y_true[..., 4]
+        b_o = calculate_ious(y_true, y_pred, use_iou=self.readjust_obj_score)
         b_o_pred = y_pred[..., 4]
 
         num_true_labels = YoloParams.GRID_SIZE*YoloParams.GRID_SIZE*YoloParams.NUM_BOUNDING_BOXES
@@ -88,18 +91,13 @@ class YoloLoss(object):
         iou_scores_buff = calculate_ious(y_true_p, K.expand_dims(y_pred, axis=4))
         best_ious = K.max(iou_scores_buff, axis=4)
 
-        indicator_noobj = K.cast(best_ious < self.iou_threshold, np.float32) * (1 - y_true[..., 4]) * self.lambda_noobj
+        indicator_noobj = K.cast(best_ious < self.iou_filter, np.float32) * (1 - y_true[..., 4]) * self.lambda_noobj
         indicator_obj = y_true[..., 4] * self.lambda_obj
-
-
-        norm_conf = 1
-        if self.norm:
-            norm_conf = K.sum(K.cast((indicator_obj + indicator_noobj)  > 0.0, np.float32))
-
         indicator_o = indicator_obj + indicator_noobj
-        loss_obj = K.sum(K.square(b_o-b_o_pred) * indicator_o, axis=[1,2,3])
 
-        return loss_obj / (norm_conf + EPSILON) / 2
+        loss_obj = K.sum(K.square(b_o-b_o_pred) * indicator_o)#, axis=[1,2,3])
+
+        return loss_obj / 2
 
 
     def class_loss(self, y_true, y_pred):
@@ -110,43 +108,33 @@ class YoloLoss(object):
         
         #b_class = K.argmax(y_true[..., 5:], axis=-1)
         #b_class_pred = y_pred[..., 5:]
-        #loss_class_arg = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=b_class, logits=b_class_pred)
+        #oss_class_arg = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=b_class, logits=b_class_pred)
 
         indicator_class = y_true[..., 4] * self.lambda_class
 
-        norm_class = 1
-        if self.norm:
-            norm_class = K.sum(K.cast(indicator_class > 0.0, np.float32))        
+        loss_class = K.sum(loss_class_arg * indicator_class)#, axis=[1,2,3])
 
-        loss_class = K.sum(loss_class_arg * indicator_class, axis=[1,2,3])
-
-        return loss_class / (norm_class + EPSILON)
+        return loss_class
 
 
-    def _transform_netout(self, y_pred_raw):
-        y_pred_xy = K.sigmoid(y_pred_raw[..., :2]) + YoloParams.c_grid
-        y_pred_wh = K.exp(y_pred_raw[..., 2:4]) * YoloParams.anchors
-        y_pred_conf = K.sigmoid(y_pred_raw[..., 4:5])
-        y_pred_class = y_pred_raw[...,5:]
-
-        return K.concatenate([y_pred_xy, y_pred_wh, y_pred_conf, y_pred_class], axis=-1)
+    
 
 
     def l_coord(self, y_true, y_pred_raw):
-        return self.coord_loss(y_true, self._transform_netout(y_pred_raw))
+        return self.coord_loss(y_true, _transform_netout(y_pred_raw))
 
     def l_obj(self, y_true, y_pred_raw):
-        return self.obj_loss(y_true, self._transform_netout(y_pred_raw))
+        return self.obj_loss(y_true, _transform_netout(y_pred_raw))
 
     def l_class(self, y_true, y_pred_raw):
-        return self.class_loss(y_true, self._transform_netout(y_pred_raw))
+        return self.class_loss(y_true, _transform_netout(y_pred_raw))
 
 
 
     def __call__(self, y_true, y_pred_raw):
 
-        y_pred = self._transform_netout(y_pred_raw)
-        
+        y_pred = _transform_netout(y_pred_raw)
+
         total_coord_loss = self.coord_loss(y_true, y_pred)
         total_obj_loss = self.obj_loss(y_true, y_pred)
         total_class_loss = self.class_loss(y_true, y_pred)

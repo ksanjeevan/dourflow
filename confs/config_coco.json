@@ -2,9 +2,9 @@
     "model" : {
         "input_size":       416,
         "grid_size":        13,
-        "true_box_buffer":  30,
+        "true_box_buffer":  10,
         "iou_threshold":    0.5,  
-        "nms_threshold":    0.3
+        "nms_threshold":    0.4
     },
     "config_path" : {
         "labels":           "models/coco/labels_coco.txt",

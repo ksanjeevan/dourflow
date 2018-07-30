@@ -13,15 +13,22 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 ### Dependancies
 ---
 - [keras](https://github.com/fchollet/keras)
-- [tensorflow](https://www.tensorflow.org/)
+- [tensorflow 1.9](https://www.tensorflow.org/api_docs/)
 - [numpy](http://www.numpy.org/)
 - [h5py](http://www.h5py.org/)
 - [opencv](https://pypi.org/project/opencv-python/)
-- [python3.5](https://www.python.org/)
+- [python 3.5](https://www.python.org/)
 - [moviepy](https://zulko.github.io/moviepy/) (optional, gifs)
 ### Simple use
 ---
+
+0. Clone repository: 
+```bash
+git clone https://github.com/ksanjeevan/dourflow.git
+```
+
 1. Download pretrained [model](https://drive.google.com/open?id=1khOgS8VD-paUD8KhjOLOzEXkzaXNAAMq) and place it in **dourflow/**.
+
 2. Predict on an [image](https://images.pexels.com/photos/349758/hummingbird-bird-birds-349758.jpeg?auto=compress&cs=tinysrgb&h=350):
 
 ```bash
@@ -38,13 +45,14 @@ Running `python3 dourflow.py --help`:
 
 ```bash
 usage: dourflow.py [-h] [-m MODEL] [-c CONF] [-t THRESHOLD] [-w WEIGHT_FILE]
+                   [--gif]
                    action
 
 dourflow: a keras YOLO V2 implementation.
 
 positional arguments:
-  action                what to do: 'train', 'validate', 'cam' or pass a video, image
-                        file/dir.
+  action                what to do: 'train', 'validate', 'cam' or pass a
+                        video, image file/dir.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -55,7 +63,7 @@ optional arguments:
                         detection threshold
   -w WEIGHT_FILE, --weight_file WEIGHT_FILE
                         path to weight file
-
+  --gif                 video output stored as gif also
 
 ```
 #### *action* [positional]
@@ -151,28 +159,28 @@ Output:
 
 ```bash
 Batch Processed: 100%|████████████████████████████████████████████| 4282/4282 [01:53<00:00, 37.84it/s]
-AP( bus ): 0.806
-AP( tvmonitor ): 0.716
-AP( motorbike ): 0.666
-AP( dog ): 0.811
-AP( horse ): 0.574
-AP( boat ): 0.618
-AP( sofa ): 0.625
-AP( sheep ): 0.718
-AP( bicycle ): 0.557
-AP( cow ): 0.725
-AP( pottedplant ): 0.565
-AP( train ): 0.907
-AP( bird ): 0.813
-AP( person ): 0.665
-AP( car ): 0.580
 AP( cat ): 0.908
-AP( bottle ): 0.429
-AP( diningtable ): 0.593
-AP( chair ): 0.475
-AP( aeroplane ): 0.724
+AP( train ): 0.907
+AP( dog ): 0.899
+AP( bird ): 0.814
+AP( aeroplane ): 0.810
+AP( cow ): 0.810
+AP( bus ): 0.806
+AP( motorbike ): 0.792
+AP( person ): 0.737
+AP( sheep ): 0.719
+AP( tvmonitor ): 0.718
+AP( sofa ): 0.701
+AP( bicycle ): 0.683
+AP( diningtable ): 0.665
+AP( car ): 0.641
+AP( boat ): 0.617
+AP( horse ): 0.575
+AP( pottedplant ): 0.568
+AP( chair ): 0.528
+AP( bottle ): 0.487
 -------------------------------
-mAP: 0.674
+mAP: 0.719
 
 ```
 
@@ -198,7 +206,7 @@ Will store the custom bounding box priors wherever the path indicates in the con
 
 Training will create directory **logs/** which will store metrics and checkpoints for all the different training runs.
  
-Model passed is used for [transfer learning](https://en.wikipedia.org/wiki/Transfer_learning) (TRAINING FROM SCRATCH / TRAINING ONLY LAST LAYER SHOULD BE ADDED SOON).
+Model passed is used for [transfer learning](https://en.wikipedia.org/wiki/Transfer_learning).
 
 Example:
 `python3 dourflow.py train -m models/logo/coco_model.h5 -c confs/config_custom.json`
@@ -214,11 +222,11 @@ Then, in another terminal tab you can run `tensorboard --logdir=logs/run_X` and 
 
 #### To Do
 
-- [ ] cfg parser
+- [x] Multiclass NMS
 - [x] Anchor generation for custom datasets
 - [ ] mAP write up
 - [x] Add webcam support
-- [ ] Data Augmentation
+- [x] Data Augmentation
 - [x] TensorBoard metrics
 
 #### Inspired from
