@@ -20,7 +20,7 @@ from net.neteval import YoloEvaluate, YoloTensorBoard, Callback_MAP, yolo_recall
 from net.netgen import YoloDataGenerator
 
 
-CAM_WIDTH = 1038
+CAM_WIDTH = 1024
 CAM_HEIGHT = 576
 
 class YoloV2(object):
@@ -92,20 +92,19 @@ class YoloV2(object):
     
 
     def _video_params(self, name):
-        
-        cap = cv2.VideoCapture(name)    
-        if name == 0:        
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
-            size = (CAM_WIDTH, CAM_HEIGHT)
-        else:
-            video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            size = (video_width, video_height)
 
-        video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap = cv2.VideoCapture(name)    
         
+        video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps = round(cap.get(cv2.CAP_PROP_FPS))
+        
+        if name == 0:        
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
+    
+        video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        size = (video_width, video_height)
 
         return cap, size, video_len, fps
 
@@ -122,7 +121,6 @@ class YoloV2(object):
 
             boxes, scores, _, labels = self.inf_model.predict(frame)
             frame_pred = draw_boxes(frame, (boxes, scores, labels))
-
             writer.write(frame_pred)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -141,6 +139,7 @@ class YoloV2(object):
         cap, size, _, fps = self._video_params(0)
 
         fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
+
         if fname: writer = cv2.VideoWriter(fname, fourcc, fps, size)
 
         while(cap.isOpened()):
@@ -158,7 +157,8 @@ class YoloV2(object):
                     break
 
         cap.release()
-        if fname: 
+
+        if fname:
             writer.release()
             if YoloParams.STORE_GIF: generate_gif(fname)
         cv2.destroyAllWindows()  
