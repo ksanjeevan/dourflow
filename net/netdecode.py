@@ -47,7 +47,7 @@ class YoloOutProcess(object):
         boxes = K.concatenate([b_xy1, b_xy2], axis=-1)
         
         # filter out scores below detection threshold
-        scores_all = K.expand_dims(K.sigmoid(y_sing_pred[..., 4]), axis=-1) * K.softmax(y_sing_pred[...,5:])
+        scores_all = K.sigmoid(y_sing_pred[..., 4:5]) * K.softmax(y_sing_pred[...,5:])
         indicator_detection = scores_all > self.detection_threshold
         scores_all = scores_all * K.cast(indicator_detection, np.float32)
 

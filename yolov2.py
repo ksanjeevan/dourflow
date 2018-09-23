@@ -25,7 +25,6 @@ CAM_HEIGHT = 576
 
 class YoloV2(object):
 
-
     def __init__(self):
 
         self.yolo_arch = YoloArchitecture()

@@ -201,7 +201,6 @@ class Callback_MAP(keras.callbacks.Callback):
 
         self.tensorboard.val_writer.add_summary(summary, epoch)
 
-
         self.tensorboard.val_writer.flush()
 
 

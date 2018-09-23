@@ -13,31 +13,41 @@ EPSILON = 1e-7
 
 def calculate_ious(A1, A2, use_iou=True):
 
-    if not use_iou: 
+    if not use_iou:
         return A1[..., 4]
 
-    A1_xy = A1[..., 0:2]
-    A1_wh = A1[..., 2:4]
-
-    A2_xy = A2[..., 0:2]
-    A2_wh = A2[..., 2:4]
+    def process_boxes(A):
+        # ALign x-w, y-h
+        A_xy = A[..., 0:2]
+        A_wh = A[..., 2:4]
+        
+        A_wh_half = A_wh / 2.
+        # Get x_min, y_min
+        A_mins = A_xy - A_wh_half
+        # Get x_max, y_max
+        A_maxes = A_xy + A_wh_half
+        
+        return A_mins, A_maxes, A_wh
     
-    A1_wh_half = A1_wh / 2.
-    A1_mins = A1_xy - A1_wh_half
-    A1_maxes = A1_xy + A1_wh_half
-    
-    A2_wh_half = A2_wh / 2.
-    A2_mins = A2_xy - A2_wh_half
-    A2_maxes = A2_xy + A2_wh_half
+    # Process two sets
+    A2_mins, A2_maxes, A2_wh = process_boxes(A2)
+    A1_mins, A1_maxes, A1_wh = process_boxes(A1)
 
+    # Intersection as min(Upper1, Upper2) - max(Lower1, Lower2)
     intersect_mins  = K.maximum(A2_mins,  A1_mins)
     intersect_maxes = K.minimum(A2_maxes, A1_maxes)
+    
+    # Getting the intersections in the xy (aka the width, height intersection)
     intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
+
+    # Multiply to get intersecting area
     intersect_areas = intersect_wh[..., 0] * intersect_wh[..., 1]
     
+    # Values for the single sets
     true_areas = A1_wh[..., 0] * A1_wh[..., 1]
     pred_areas = A2_wh[..., 0] * A2_wh[..., 1]
 
+    # Compute union for the IoU
     union_areas = pred_areas + true_areas - intersect_areas
     return intersect_areas / union_areas
 
