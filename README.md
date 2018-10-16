@@ -17,7 +17,6 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 - [numpy](http://www.numpy.org/)
 - [h5py](http://www.h5py.org/)
 - [opencv](https://pypi.org/project/opencv-python/)
-- [python 3.5](https://www.python.org/)
 - [moviepy](https://zulko.github.io/moviepy/) (optional, gifs)
 ### Simple use
 ---
@@ -27,7 +26,7 @@ Original paper and github: [YOLO9000: Better, Faster, Stronger](https://arxiv.or
 git clone https://github.com/ksanjeevan/dourflow.git
 ```
 
-1. Download pretrained [model](https://drive.google.com/open?id=1khOgS8VD-paUD8KhjOLOzEXkzaXNAAMq) and place it in **dourflow/**.
+1. Download pretrained model: [3.5](https://drive.google.com/open?id=1khOgS8VD-paUD8KhjOLOzEXkzaXNAAMq) / [3.6](https://drive.google.com/file/d/1KgiKBcDuHfUvI8tM8JKgKbUWuGGz-N1I/view?usp=sharing) and place it in **dourflow/**.
 
 2. Predict on an [image](https://images.pexels.com/photos/349758/hummingbird-bird-birds-349758.jpeg?auto=compress&cs=tinysrgb&h=350):
 
